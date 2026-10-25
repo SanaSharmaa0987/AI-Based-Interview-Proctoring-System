@@ -1,11 +1,372 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Interview Analysis</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+```
+<title>AI Interview Analysis</title>
+
+<link rel="stylesheet" href="style.css">
+```
+
 </head>
+
 <body>
-  <h1>AI Interview Analysis</h1>
+
+```
+<header class="navbar">
+    <div class="brand">
+        <div class="brand-icon">AI</div>
+
+        <div>
+            <h1>InterviewAI</h1>
+            <p>Behavioral Analysis System</p>
+        </div>
+    </div>
+
+    <div class="system-status">
+        <span class="status-dot"></span>
+        <span id="connectionStatus">Backend not connected</span>
+    </div>
+</header>
+
+
+<main class="container">
+
+    <section class="welcome-section">
+        <div>
+            <p class="eyebrow">AI-POWERED INTERVIEW PLATFORM</p>
+
+            <h2>Interview Analysis Dashboard</h2>
+
+            <p class="subtitle">
+                Monitor interview sessions and review computer-vision
+                analysis results in one place.
+            </p>
+        </div>
+
+        <div class="session-badge">
+            <span class="status-dot"></span>
+            <span id="sessionStatus">Session not started</span>
+        </div>
+    </section>
+
+
+    <section class="dashboard-grid">
+
+        <!-- Webcam Section -->
+
+        <div class="card webcam-card">
+
+            <div class="card-heading">
+                <div>
+                    <h3>Live Interview Camera</h3>
+                    <p>Camera preview and interview controls</p>
+                </div>
+
+                <span class="live-badge" id="cameraBadge">
+                    CAMERA OFF
+                </span>
+            </div>
+
+
+            <div class="camera-container">
+
+                <video
+                    id="webcam"
+                    autoplay
+                    playsinline
+                    muted>
+                </video>
+
+                <div class="camera-placeholder" id="cameraPlaceholder">
+
+                    <div class="camera-icon">📷</div>
+
+                    <h3>Camera preview</h3>
+
+                    <p>
+                        Allow camera access to preview your interview.
+                    </p>
+
+                </div>
+
+                <div class="camera-overlay" id="cameraOverlay">
+                    <span class="recording-dot"></span>
+                    <span>INTERVIEW IN PROGRESS</span>
+                </div>
+
+            </div>
+
+
+            <p class="camera-message" id="cameraMessage">
+                Camera access has not been requested.
+            </p>
+
+
+            <div class="button-group">
+
+                <button id="startCameraBtn" class="btn btn-secondary">
+                    Enable Camera
+                </button>
+
+                <button id="startInterviewBtn" class="btn btn-primary">
+                    Start Interview
+                </button>
+
+                <button id="stopInterviewBtn" class="btn btn-danger" disabled>
+                    Stop Interview
+                </button>
+
+            </div>
+
+
+            <div class="timer-section">
+                <span>Interview Duration</span>
+                <strong id="timer">00:00:00</strong>
+            </div>
+
+        </div>
+
+
+        <!-- Candidate Details -->
+
+        <div class="card candidate-card">
+
+            <div class="card-heading">
+                <div>
+                    <h3>Interview Details</h3>
+                    <p>Candidate session information</p>
+                </div>
+            </div>
+
+
+            <form id="candidateForm">
+
+                <label for="candidateName">Candidate Name</label>
+
+                <input
+                    type="text"
+                    id="candidateName"
+                    placeholder="Enter candidate name"
+                    maxlength="100"
+                    required
+                >
+
+
+                <label for="candidateId">Candidate ID</label>
+
+                <input
+                    type="text"
+                    id="candidateId"
+                    placeholder="Enter candidate ID"
+                    maxlength="50"
+                    required
+                >
+
+
+                <label for="interviewRole">Interview Role</label>
+
+                <select id="interviewRole" required>
+
+                    <option value="">Select a role</option>
+
+                    <option value="Data Analyst">Data Analyst</option>
+
+                    <option value="AI/ML Engineer">AI/ML Engineer</option>
+
+                    <option value="Python Developer">Python Developer</option>
+
+                    <option value="Web Developer">Web Developer</option>
+
+                    <option value="Other">Other</option>
+
+                </select>
+
+
+                <button type="submit" class="btn btn-outline">
+                    Save Interview Details
+                </button>
+
+            </form>
+
+
+            <div class="candidate-summary">
+
+                <p>
+                    <span>Candidate</span>
+                    <strong id="summaryName">Not provided</strong>
+                </p>
+
+                <p>
+                    <span>Role</span>
+                    <strong id="summaryRole">Not selected</strong>
+                </p>
+
+                <p>
+                    <span>Session</span>
+                    <strong id="summarySession">Not started</strong>
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- Analysis Cards -->
+
+    <section class="analysis-section">
+
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">COMPUTER VISION MODULES</p>
+                <h2>Behavioral Analysis</h2>
+
+                <p class="subtitle">
+                    Results will appear when the analysis backend
+                    provides them.
+                </p>
+            </div>
+        </div>
+
+
+        <div class="analysis-grid">
+
+
+            <!-- Vaishnavi's Module -->
+
+            <article class="card analysis-card">
+
+                <div class="module-icon">👁️</div>
+
+                <h3>Face & Gaze Analysis</h3>
+
+                <p>
+                    Face presence and gaze-related measurements.
+                </p>
+
+                <div class="metric-value" id="gazeValue">—</div>
+
+                <div class="metric-label">Analysis result</div>
+
+                <span class="module-status" id="gazeStatus">
+                    Waiting for backend
+                </span>
+
+            </article>
+
+
+            <!-- Sanjana's Module -->
+
+            <article class="card analysis-card">
+
+                <div class="module-icon">🧠</div>
+
+                <h3>Behavior Detection</h3>
+
+                <p>
+                    Review observable behavior indicators.
+                </p>
+
+                <div class="metric-value" id="behaviorValue">—</div>
+
+                <div class="metric-label">Analysis result</div>
+
+                <span class="module-status" id="behaviorStatus">
+                    Waiting for backend
+                </span>
+
+            </article>
+
+
+            <!-- Tripti's Module -->
+
+            <article class="card analysis-card">
+
+                <div class="module-icon">📱</div>
+
+                <h3>Suspicious Activity</h3>
+
+                <p>
+                    Object detection results, such as phone detection.
+                </p>
+
+                <div class="metric-value" id="suspiciousValue">—</div>
+
+                <div class="metric-label">Detection result</div>
+
+                <span class="module-status" id="suspiciousStatus">
+                    Waiting for backend
+                </span>
+
+            </article>
+
+
+        </div>
+
+    </section>
+
+
+    <!-- Session Summary -->
+
+    <section class="card summary-card">
+
+        <div class="card-heading">
+            <div>
+                <h3>Session Summary</h3>
+                <p>Overview of the current interview session</p>
+            </div>
+        </div>
+
+
+        <div class="summary-grid">
+
+            <div class="summary-item">
+                <span>Session Status</span>
+                <strong id="finalSessionStatus">Not started</strong>
+            </div>
+
+            <div class="summary-item">
+                <span>Interview Duration</span>
+                <strong id="finalDuration">00:00:00</strong>
+            </div>
+
+            <div class="summary-item">
+                <span>Backend Status</span>
+                <strong id="finalBackendStatus">Disconnected</strong>
+            </div>
+
+        </div>
+
+
+        <p class="disclaimer">
+            Computer-vision indicators are intended for review and
+            should not be treated as definitive evidence of dishonesty
+            or a candidate's character.
+        </p>
+
+    </section>
+
+
+    <footer>
+        <p>
+            AI-Based Online Interview Behavioral Analysis
+            & Suspicious Activity Detection
+        </p>
+
+        <p>Frontend Module — Riya</p>
+    </footer>
+
+</main>
+
+
+<script src="config.js"></script>
+<script src="script.js"></script>
+```
+
 </body>
 </html>
