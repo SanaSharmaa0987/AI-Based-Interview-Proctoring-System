@@ -17,7 +17,11 @@ let interviewRunning = false;
 let interviewStartTime = null;
 let timerInterval = null;
 let backendInterval = null;
+let frameInterval = null;
+let frameUploadInProgress = false;
 let savedCandidate = null;
+const analysisCanvas = document.createElement("canvas");
+const analysisContext = analysisCanvas.getContext("2d");
 
 function setText(id, value) {
 const element = document.getElementById(id);
@@ -119,13 +123,15 @@ cameraMessage.textContent = "Camera is off.";
 function resetAnalysis() {
 setText("gazeValue", "—");
 setText("behaviorValue", "—");
+setText("expressionValue", "—");
 setText("suspiciousValue", "—");
 
 setText("gazeStatus", "Waiting for backend");
 setText("behaviorStatus", "Waiting for backend");
+setText("expressionStatus", "Waiting for backend");
 setText("suspiciousStatus", "Waiting for backend");
 
-["gazeStatus", "behaviorStatus", "suspiciousStatus"]
+["gazeStatus", "behaviorStatus", "expressionStatus", "suspiciousStatus"]
     .forEach(id => {
         document.getElementById(id).classList.remove("connected");
     });
@@ -156,15 +162,18 @@ try {
 
     const data = await response.json();
     const connected = data.status === "ok";
+    const ready = data.analysis_ready !== false;
 
     setText(
         "connectionStatus",
-        connected ? "Backend connected" : "Backend unavailable"
+        connected && ready ? "Backend connected" :
+            connected ? "Backend connected; model missing" : "Backend unavailable"
     );
 
     setText(
         "finalBackendStatus",
-        connected ? "Connected" : "Unavailable"
+        connected && ready ? "Connected" :
+            connected ? "Model missing" : "Unavailable"
     );
 
 } catch (error) {
@@ -201,6 +210,13 @@ try {
         );
     }
 
+    if (data.expression) {
+        updateAnalysisCard(
+            "expressionValue", "expressionStatus",
+            data.expression.value, data.expression.status
+        );
+    }
+
     if (data.suspicious_activity) {
         updateAnalysisCard(
             "suspiciousValue", "suspiciousStatus",
@@ -213,6 +229,38 @@ try {
     console.error("Analysis results error:", error);
 }
 
+}
+
+async function uploadAnalysisFrame() {
+if (!config.ENABLE_BACKEND || !interviewRunning || !cameraStream || frameUploadInProgress) return;
+if (!webcam.videoWidth || !webcam.videoHeight || !savedCandidate?.session_id) return;
+
+frameUploadInProgress = true;
+try {
+    const scale = Math.min(1, 640 / webcam.videoWidth);
+    analysisCanvas.width = Math.round(webcam.videoWidth * scale);
+    analysisCanvas.height = Math.round(webcam.videoHeight * scale);
+    analysisContext.drawImage(webcam, 0, 0, analysisCanvas.width, analysisCanvas.height);
+    const frame = await new Promise(resolve => analysisCanvas.toBlob(resolve, "image/jpeg", 0.7));
+    if (!frame) return;
+
+    const formData = new FormData();
+    formData.append("frame", frame, "frame.jpg");
+    formData.append("session_id", savedCandidate.session_id);
+    const response = await fetch(config.API_BASE_URL + "/api/analysis/frame", {
+        method: "POST",
+        body: formData
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Frame analysis failed");
+    }
+} catch (error) {
+    console.error("Frame upload error:", error);
+    cameraMessage.textContent = "Analysis paused: " + error.message;
+} finally {
+    frameUploadInProgress = false;
+}
 }
 
 candidateForm.addEventListener("submit", function (event) {
@@ -255,6 +303,23 @@ if (!cameraStream) {
     if (!started) return;
 }
 
+if (config.ENABLE_BACKEND) {
+    try {
+        const response = await fetch(config.API_BASE_URL + "/api/interview/start", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(savedCandidate)
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Could not start backend session");
+        savedCandidate.session_id = result.session_id;
+    } catch (error) {
+        console.error("Start session error:", error);
+        cameraMessage.textContent = error.message;
+        return;
+    }
+}
+
 interviewRunning = true;
 interviewStartTime = Date.now();
 
@@ -272,30 +337,13 @@ stopInterviewBtn.disabled = false;
 
 timerInterval = setInterval(updateTimer, 1000);
 
-cameraMessage.textContent =
-    "Interview started. Waiting for analysis backend.";
+cameraMessage.textContent = "Interview started. Analysis is running.";
 
 await checkBackend();
 
 if (config.ENABLE_BACKEND) {
-    try {
-        const response = await fetch(
-            config.API_BASE_URL + "/api/interview/start",
-            {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(savedCandidate)
-            }
-        );
-
-        if (!response.ok) {
-            throw new Error("Could not start backend session");
-        }
-
-    } catch (error) {
-        console.error("Start session error:", error);
-    }
-
+    uploadAnalysisFrame();
+    frameInterval = setInterval(uploadAnalysisFrame, 1000);
     await fetchAnalysisResults();
     backendInterval = setInterval(fetchAnalysisResults, 2000);
 }
@@ -310,9 +358,11 @@ updateTimer();
 
 clearInterval(timerInterval);
 clearInterval(backendInterval);
+clearInterval(frameInterval);
 
 timerInterval = null;
 backendInterval = null;
+frameInterval = null;
 
 setText("sessionStatus", "Interview completed");
 setText("summarySession", "Completed");
@@ -334,7 +384,7 @@ if (config.ENABLE_BACKEND) {
             {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(savedCandidate)
+                body: JSON.stringify({ session_id: savedCandidate.session_id })
             }
         );
     } catch (error) {
@@ -347,6 +397,14 @@ if (config.ENABLE_BACKEND) {
 window.addEventListener("beforeunload", function () {
 clearInterval(timerInterval);
 clearInterval(backendInterval);
+clearInterval(frameInterval);
+if (interviewRunning && savedCandidate?.session_id) {
+    const body = new Blob(
+        [JSON.stringify({ session_id: savedCandidate.session_id })],
+        { type: "application/json" }
+    );
+    navigator.sendBeacon(config.API_BASE_URL + "/api/interview/stop", body);
+}
 stopCamera();
 });
 

@@ -8,6 +8,10 @@ venv/
 **pycache**/
 *.pyc
 
+# Downloaded inference model weights
+models/emotion-ferplus-8.onnx
+models/yolov8n.pt
+
 # Environment variables and secrets
 
 .env
@@ -21,3 +25,4 @@ Thumbs.db
 # Logs
 
 *.log
+data/session_results.csv

@@ -60,11 +60,13 @@ source venv/bin/activate       # Mac/Linux
 pip install -r requirements.txt
 ```
 
-Download the MediaPipe model into the `models/` folder:
+Download the MediaPipe, FER+ expression CNN, and YOLO model weights into `models/`:
 
 ```bash
-curl -L -o models/face_landmarker.task https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task
+python -m backend.download_models
 ```
+
+The downloader refreshes the tracked MediaPipe model and stores the FER+ and YOLO weights locally; those larger model files are ignored by Git and need to be downloaded on each machine.
 
 ## How to Run
 
@@ -82,22 +84,21 @@ python -m modules.gaze.gaze_detection
 ```
 Results are saved in `data/gaze_results.csv`. Press `q` to quit.
 
-**Frontend**
-1. Open the `frontend/` folder in VS Code.
-2. Install the Live Server extension.
-3. Right-click `index.html` and choose Open with Live Server.
-4. Allow camera permission in the browser.
+## Backend API
 
-Only one program can use the webcam at a time. Close the others before testing.
+Run the API and dashboard from one terminal at the project root after installing `requirements.txt`:
 
-## Backend API (planned)
+```bash
+python -m backend.app
+```
 
-The frontend is already built for these routes. In `frontend/config.js`, set `ENABLE_BACKEND: true` when the backend is ready.
+Open `http://127.0.0.1:5000/` and allow camera permission in the browser. Flask serves the dashboard and API together. If port 5000 is already in use, set `PORT=5001` before running the command and open `http://127.0.0.1:5001/`. The frontend sends a resized camera frame once per second while an interview is active. All three model files are required; `/api/health` lists missing models and dependencies. Close other programs using the webcam before testing.
 
 | Method | Route | Purpose |
 |---|---|---|
 | GET | `/api/health` | Check that the backend is running |
 | POST | `/api/interview/start` | Start a session |
+| POST | `/api/analysis/frame` | Analyze a JPEG frame (`frame` and `session_id` form fields) |
 | POST | `/api/interview/stop` | Stop a session |
 | GET | `/api/analysis/latest` | Get the latest results |
 
@@ -106,20 +107,25 @@ Expected response from `/api/analysis/latest`:
 ```json
 {
   "gaze": { "value": "Center", "status": "Looking at screen" },
+  "expression": { "value": "Neutral", "confidence": 0.8 },
   "behavior": { "value": "Normal Posture", "status": "Behavior looks normal" },
-  "suspicious_activity": { "value": "Low", "status": "No issue found" }
+  "detected_objects": [],
+  "suspicious_activity": { "value": "Low", "score": 0, "status": "No sustained signal detected" }
 }
 ```
+
+Results are written to `data/session_results.csv`. The combined score is a transparent heuristic based on face presence, sustained head movement, and phone/book detections. Expression output is not included in the score. These outputs are review signals, not proof of misconduct.
 
 ## Current Status
 
 - [x] Frontend dashboard
 - [x] Face detection and gaze estimation
 - [x] Behavior detection module
-- [ ] Flask backend
-- [ ] YOLO object detection
-- [ ] Combined suspicious activity score
-- [ ] Integration of all modules
+- [x] Flask backend and dashboard integration
+- [x] Facial-expression CNN inference
+- [x] YOLO phone/book object detection
+- [x] Combined suspicious activity score
+- [x] Integration of all modules
 - [ ] Demo video and final report
 
 ## Limitations
@@ -131,6 +137,6 @@ Expected response from `/api/analysis/latest`:
 ## Future Work
 
 - More accurate head pose with `solvePnP`
-- Phone and book detection with YOLO
+- Validate phone and book detections under different camera conditions
 - Session report with charts
 - Fairness and accuracy testing on different users

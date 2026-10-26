@@ -1,10 +1,9 @@
 window.APP_CONFIG = {
 // Replace this with Tripti's actual backend URL when available.
-API_BASE_URL: "http://127.0.0.1:5000",
+API_BASE_URL: window.location.origin,
 
 
-// Keep false until the backend API is ready.
-ENABLE_BACKEND: false
-
-
+// Use the local Flask backend.
+ENABLE_BACKEND: true
 };
+

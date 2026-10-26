@@ -84,6 +84,24 @@ def head_pose_ratios(points):
     return yaw, pitch
 
 
+def gaze_direction(points):
+    """Estimate horizontal gaze from the left iris and eye corners."""
+    if len(points) <= 468:
+        return "Unavailable"
+    iris = points[468].x
+    outer = points[33].x
+    inner = points[133].x
+    eye_width = abs(inner - outer)
+    if eye_width == 0:
+        return "Unavailable"
+    ratio = (iris - min(outer, inner)) / eye_width
+    if ratio < 0.35:
+        return "Left"
+    if ratio > 0.65:
+        return "Right"
+    return "Center"
+
+
 class BehaviorAnalyzer:
     """Keeps state across frames, so create it once and call analyze() per frame."""
 
@@ -121,7 +139,11 @@ class BehaviorAnalyzer:
         result = self.landmarker.detect_for_video(mp_image, timestamp_ms)
 
         faces = result.face_landmarks
-        details = {"faces": len(faces), "blinks_per_min": self._blink_rate(now)}
+        details = {
+            "faces": len(faces),
+            "blinks_per_min": self._blink_rate(now),
+            "gaze_direction": "Unavailable",
+        }
 
         # 1) No face
         if not faces:
@@ -146,6 +168,13 @@ class BehaviorAnalyzer:
             )
 
         points = faces[0]
+        frame_height, frame_width = frame_bgr.shape[:2]
+        left = max(0, int(min(point.x for point in points) * frame_width))
+        top = max(0, int(min(point.y for point in points) * frame_height))
+        right = min(frame_width, int(max(point.x for point in points) * frame_width))
+        bottom = min(frame_height, int(max(point.y for point in points) * frame_height))
+        details["face_bbox"] = [left, top, right - left, bottom - top]
+        details["gaze_direction"] = gaze_direction(points)
         yaw, pitch = head_pose_ratios(points)
 
         # 3) Calibration: learn the normal pose first

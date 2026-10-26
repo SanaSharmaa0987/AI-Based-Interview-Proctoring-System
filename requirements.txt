@@ -6,9 +6,7 @@ numpy>=1.24.0
 # Backend API
 flask>=3.0.0
 flask-cors>=4.0.0
-
-# Object detection (Tripti's YOLO module) - uncomment when needed
-# ultralytics>=8.0.0
+ultralytics>=8.3.0,<9.0.0
 
 # Behavior scoring (optional) - uncomment if machine learning is added
 # scikit-learn>=1.3.0
