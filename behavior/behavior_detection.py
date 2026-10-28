@@ -16,7 +16,7 @@ How the backend should use it:
     # {"value": "Head Turned Left", "status": "Warning: ...", "details": {...}}
 
 The "value" and "status" keys match what the frontend cards expect.
-Run this file directly to test with your webcam: python behavior_detection.py
+
 """
 
 import time
