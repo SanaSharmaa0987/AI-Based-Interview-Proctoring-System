@@ -18,7 +18,6 @@ EXPRESSION_LABELS = [
 ]
 TARGET_OBJECTS = {"book", "cell phone"}
 
-
 class InterviewAnalyzer:
     """Runs face behavior, FER+ expression, and COCO object detection on each frame."""
 
