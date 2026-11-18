@@ -51,7 +51,7 @@ AI-Based-Interview-Proctoring-System/
 | Vaishnavi | Face and gaze analysis |
 | Sanjana | Behavior detection, warning and blackout |
 | Tripti | Backend and YOLO |
-| Riya | Frontend and Git coordination |
+| Riya | Frontend |
 
 ## Setup
 
