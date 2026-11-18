@@ -73,6 +73,7 @@ def append_result(analysis):
                 "expression": analysis["expression"],
                 "detected_objects": analysis["detected_objects"],
                 "risk_score": analysis["suspicious_activity"].get("score"),
+                "enforcement": analysis.get("enforcement"),
             }),
         ])
 
