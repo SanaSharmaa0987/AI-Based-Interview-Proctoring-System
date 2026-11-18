@@ -3,6 +3,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+from backend.enforcement import SustainedActivityTracker
 from behavior.behavior_detection import BehaviorAnalyzer
 
 
@@ -23,6 +24,7 @@ class InterviewAnalyzer:
 
     def __init__(self, face_model: Path, expression_model: Path, yolo_model: Path):
         self.behavior = BehaviorAnalyzer(str(face_model))
+        self.enforcement = SustainedActivityTracker()
         try:
             from ultralytics import YOLO
 
@@ -52,6 +54,7 @@ class InterviewAnalyzer:
             "expression": expression,
             "detected_objects": objects,
             "suspicious_activity": suspicious_activity,
+            "enforcement": self.enforcement.update(suspicious_activity["score"]),
         }
 
     def close(self):

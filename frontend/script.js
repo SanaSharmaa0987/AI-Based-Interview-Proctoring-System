@@ -184,6 +184,24 @@ try {
 
 }
 
+function applyEnforcement(enforcement) {
+const banner = document.getElementById("warningBanner");
+const overlay = document.getElementById("blackoutOverlay");
+const level = enforcement ? enforcement.level : "none";
+
+banner.hidden = level !== "warning";
+overlay.hidden = level !== "blackout";
+
+if (level === "warning") banner.textContent = enforcement.message;
+if (level === "blackout") setText("blackoutMessage", enforcement.message);
+
+}
+
+function clearEnforcement() {
+document.getElementById("warningBanner").hidden = true;
+document.getElementById("blackoutOverlay").hidden = true;
+}
+
 async function fetchAnalysisResults() {
 if (!config.ENABLE_BACKEND || !interviewRunning) return;
 
@@ -224,6 +242,8 @@ try {
             data.suspicious_activity.status
         );
     }
+
+    applyEnforcement(data.enforcement);
 
 } catch (error) {
     console.error("Analysis results error:", error);
@@ -324,6 +344,7 @@ interviewRunning = true;
 interviewStartTime = Date.now();
 
 resetAnalysis();
+clearEnforcement();
 
 setText("sessionStatus", "Interview in progress");
 setText("summarySession", "In progress");
@@ -370,6 +391,7 @@ setText("finalSessionStatus", "Completed");
 
 document.getElementById("cameraOverlay")
     .classList.remove("visible");
+clearEnforcement();
 
 startInterviewBtn.disabled = false;
 stopInterviewBtn.disabled = true;
